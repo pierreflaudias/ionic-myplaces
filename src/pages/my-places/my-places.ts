@@ -1,10 +1,13 @@
 import { Component } from '@angular/core';
-
-//import { GoogleMap } from  './providers/googlemap';
-import { Platform } from 'ionic-angular';
 import { Geolocation } from '@ionic-native/geolocation';
 import { GoogleMaps, GoogleMap, GoogleMapsEvent, LatLng, CameraPosition, MarkerOptions, Marker } from '@ionic-native/google-maps';
+import { Storage } from '@ionic/storage';
+import { Diagnostic } from '@ionic-native/diagnostic';
+import { Platform } from 'ionic-angular';
+import { LocationAccuracy } from '@ionic-native/location-accuracy';
 
+import { LoadingController, Loading } from 'ionic-angular';
+import { Place } from '../../models/place';
 
 @Component({
   selector: 'page-my-places',
@@ -12,21 +15,61 @@ import { GoogleMaps, GoogleMap, GoogleMapsEvent, LatLng, CameraPosition, MarkerO
 })
 export class MyPlacesPage {
 
-  latitude: any;
-  longitude: any;
-  constructor(private geolocation: Geolocation, private googleMaps: GoogleMaps){}
+  places: Array<Place> = [];
+  myplace: Place = new Place();
+  selectedPlace: Place = new Place();
+  loading: Loading;
 
-  ngOnInit() {
-      let options = {
-          enableHighAccuracy: true,
-          timeout: 20000,
-          maximumAge: 60000
-        };
+  constructor(private geolocation: Geolocation, private googleMaps: GoogleMaps, private storage: Storage, private diagnostic: Diagnostic, private platform: Platform, private locationAccuracy: LocationAccuracy, private loadingCtrl: LoadingController){
+    this.loading = loadingCtrl.create();
+    this.loading.present();
+    platform.ready().then(() => {
+      this.checkLocationAuthorization();
+    });
+    storage.ready().then(() => {
+
+      storage.forEach( (value, key, index) => {
+      	this.places.push(value);
+        console.log(this.places);
+      });
+
+     });
+  }
+
+  checkLocationAuthorization(){
+    this.diagnostic.isLocationEnabled().then((isEnabled) => {
+      if(isEnabled){
+        console.log('location enabled');
+        this.getPosition();
+      } else{
+        console.log('location not enabled');
+        this.locationAccuracy.canRequest().then((canRequest: boolean) => {
+          if(canRequest) {
+            // the accuracy option will be ignored by iOS
+            this.locationAccuracy.request(this.locationAccuracy.REQUEST_PRIORITY_HIGH_ACCURACY).then(
+              () => {
+                console.log('Location permission granted');
+                this.getPosition();
+              })
+              .catch(error => console.log('Error requesting location permissions', error)
+            );
+          }
+        });
+      }
+    }).catch(err => console.log(err));
+  }
+
+  getPosition(){
+    let options = {
+      enableHighAccuracy: true,
+      timeout: 20000,
+      maximumAge: 60000
+    };
     this.geolocation.getCurrentPosition(options).then((resp) => {
-        this.latitude = resp.coords.latitude;
-        this.longitude = resp.coords.longitude;
-      console.log("Latitude : " , this.latitude);
-      console.log("Longitude : " , this.longitude);
+      this.myplace = new Place(resp.coords.longitude, resp.coords.latitude, 'You are here');
+
+      console.log("Latitude : " , this.myplace.latitude);
+      console.log("Longitude : " , this.myplace.longitude);
       this.loadMap();
     })
     .catch((error) => {
@@ -51,14 +94,15 @@ export class MyPlacesPage {
      map.one(GoogleMapsEvent.MAP_READY).then(
        () => {
          console.log('Map is ready!');
+         this.loading.dismiss();
          // Now you can add elements to the map like the marker
            // create LatLng object
-           let position: LatLng = new LatLng(this.latitude, this.longitude);
+           let position: LatLng = new LatLng(this.myplace.latitude, this.myplace.longitude);
 
            // create CameraPosition
            let camPosition: CameraPosition = {
              target: position,
-             zoom: 10,
+             zoom: 15,
              tilt: 30
            };
 
@@ -68,17 +112,44 @@ export class MyPlacesPage {
            // create new marker
           let markerOptions: MarkerOptions = {
             position: position,
-            title: 'You are here'
+            title: this.myplace.title
           };
 
-          const marker: any = map.addMarker(markerOptions)
-            .then((marker: Marker) => {
-               marker.showInfoWindow();
-             });
+          for (let place of this.places){
+            let markerOptions: MarkerOptions = {
+              position: new LatLng(place.latitude, place.longitude),
+              title: place.title,
+            }
+            map.addMarker(markerOptions)
+              .then((marker: Marker) => {
+                 marker.showInfoWindow();
+                 marker.addEventListener(GoogleMapsEvent.MARKER_CLICK)
+                    .subscribe((e) => {
+                      this.selectedPlace.title = e.getTitle();
+                      this.selectedPlace.latitude = e.get('position').lat;
+                      this.selectedPlace.longitude = e.get('position').lng;
+                    });
+               });
+          }
+
+          map.addMarker(markerOptions)
+          .then((marker: Marker) => {
+            marker.showInfoWindow();
+          });
        }
      );
+   }
 
+  addPlace() {
+    console.log(this.myplace);
+    this.places.push(this.myplace);
+    this.storage.ready().then(() => {
+      this.storage.length().then((l) => {
+        // set a key/value
+        this.storage.set(l.toString(), this.myplace);
+      });
+     });
+
+  }
 
  }
-
-}

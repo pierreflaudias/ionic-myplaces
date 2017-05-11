@@ -3,12 +3,19 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>My-places</ion-title>
+    <ion-title>My places</ion-title>
   </ion-navbar>
 </ion-header>
 
 <ion-content>
     <div #map id="map" style="height:70%; width:90%; margin:20px auto;"></div>
-    <p>{{ latitude }}</p>
-    <p>{{ longitude }}</p>
+    <p>Longitude : {{ myplace.longitude }}</p>
+    <p>Latitude : {{ myplace.latitude }}</p>
+    <form (ngSubmit)="addPlace()">
+      <ion-item>
+        <ion-label floating>Title</ion-label>
+        <ion-input type="text" [(ngModel)]="myplace.title" name="title"></ion-input>
+      </ion-item>
+      <button ion-button type="submit" color="secondary" round>Add your place</button>
+  </form>
 </ion-content>
