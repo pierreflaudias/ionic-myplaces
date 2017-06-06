@@ -23,58 +23,69 @@ export class MyPlacesPage {
   constructor(private geolocation: Geolocation, private googleMaps: GoogleMaps, private storage: Storage, private diagnostic: Diagnostic, private platform: Platform, private locationAccuracy: LocationAccuracy, private loadingCtrl: LoadingController){
     this.loading = loadingCtrl.create();
     this.loading.present();
-    platform.ready().then(() => {
-      this.checkLocationAuthorization();
-    });
-    storage.ready().then(() => {
-
-      storage.forEach( (value, key, index) => {
-      	this.places.push(value);
-        console.log(this.places);
-      });
-
+    platform.ready()
+      .then(() => this.checkLocationAuthorization())
+      // .then(storage.ready)
+      .then(() => {
+        storage.forEach( (value, key, index) => {
+          this.places.push(value);
+          console.log(this.places);
+        });
      });
   }
 
   checkLocationAuthorization(){
-    this.diagnostic.isLocationEnabled().then((isEnabled) => {
-      if(isEnabled){
-        console.log('location enabled');
-        this.getPosition();
-      } else{
-        console.log('location not enabled');
-        this.locationAccuracy.canRequest().then((canRequest: boolean) => {
-          if(canRequest) {
-            // the accuracy option will be ignored by iOS
-            this.locationAccuracy.request(this.locationAccuracy.REQUEST_PRIORITY_HIGH_ACCURACY).then(
-              () => {
-                console.log('Location permission granted');
-                this.getPosition();
-              })
-              .catch(error => console.log('Error requesting location permissions', error)
-            );
-          }
-        });
-      }
+    this.diagnostic.isLocationEnabled()
+      .then((isEnabled) => {
+        if(isEnabled){
+          console.log('location enabled');
+          this.getPosition();
+        } else{
+          console.log('location not enabled');
+          this.locationAccuracy.canRequest().then((canRequest: boolean) => {
+            if(canRequest) {
+              // the accuracy option will be ignored by iOS
+              this.locationAccuracy.request(this.locationAccuracy.REQUEST_PRIORITY_LOW_POWER).then(
+                () => {
+                  console.log('Location permission granted');
+                  this.getPosition();
+                })
+                .catch(error => console.log('Error requesting location permissions', error)
+              );
+            } else {
+              console.log("Unable to request location");
+            }
+          });
+        }
     }).catch(err => console.log(err));
   }
 
   getPosition(){
     let options = {
-      enableHighAccuracy: true,
-      timeout: 20000,
-      maximumAge: 60000
+      enableHighAccuracy: false,
+      timeout: 3000
     };
-    this.geolocation.getCurrentPosition(options).then((resp) => {
-      this.myplace = new Place(resp.coords.longitude, resp.coords.latitude, 'You are here');
+    console.log(options);
+    const subscription = this.geolocation.watchPosition(options)
+      //.filter((p) => p.coords !== undefined) //Filter Out Errors
+      .subscribe(position => {
+        console.log(position.coords.longitude + ' ' + position.coords.latitude);
+        this.myplace = new Place(position.coords.longitude, position.coords.latitude, 'You are here');
 
-      console.log("Latitude : " , this.myplace.latitude);
-      console.log("Longitude : " , this.myplace.longitude);
-      this.loadMap();
+        console.log("Latitude : " , this.myplace.latitude);
+        console.log("Longitude : " , this.myplace.longitude);
+        this.loadMap();
+      });
+    /*this.geolocation.getCurrentPosition(options)
+      .then((resp) => {
+        console.log(resp);
+        this.myplace = new Place(resp.coords.longitude, resp.coords.latitude, 'You are here');
+
+        console.log("Latitude : " , this.myplace.latitude);
+        console.log("Longitude : " , this.myplace.longitude);
+        this.loadMap();
     })
-    .catch((error) => {
-      console.log('Error getting location', error);
-    });
+    .catch(error => console.log("Error getting location", error));*/
   }
 
   loadMap() {
@@ -87,58 +98,69 @@ export class MyPlacesPage {
      // create a new map by passing HTMLElement
      let element: HTMLElement = document.getElementById('map');
 
-     let map: GoogleMap = this.googleMaps.create(element);
+     console.log(element);
 
-     // listen to MAP_READY event
-     // You must wait for this event to fire before adding something to the map or modifying it in anyway
-     map.one(GoogleMapsEvent.MAP_READY).then(
-       () => {
-         console.log('Map is ready!');
-         this.loading.dismiss();
-         // Now you can add elements to the map like the marker
-           // create LatLng object
-           let position: LatLng = new LatLng(this.myplace.latitude, this.myplace.longitude);
+    this.googleMaps.isAvailable().then(() => {
+      let map: GoogleMap = this.googleMaps.create(element);
 
-           // create CameraPosition
-           let camPosition: CameraPosition = {
-             target: position,
-             zoom: 15,
-             tilt: 30
-           };
+       console.log(map);
 
-           // move the map's camera to position
-           map.moveCamera(camPosition);
+       // listen to MAP_READY event
+       // You must wait for this event to fire before adding something to the map or modifying it in anyway
+      map.one(GoogleMapsEvent.MAP_READY)
+         .then(() => {
+           console.log('Map is ready!');
+           this.loading.dismiss();
+           // Now you can add elements to the map like the marker
+             // create LatLng object
+             let position: LatLng = new LatLng(this.myplace.latitude, this.myplace.longitude);
 
-           // create new marker
-          let markerOptions: MarkerOptions = {
-            position: position,
-            title: this.myplace.title
-          };
+             // create CameraPosition
+             let camPosition: CameraPosition = {
+               target: position,
+               zoom: 15,
+               tilt: 30
+             };
 
-          for (let place of this.places){
+             // move the map's camera to position
+             map.moveCamera(camPosition).then((resp) => {
+               console.log(resp);
+             }).catch((err) => {
+               console.log(err);
+             });
+
+             // create new marker
             let markerOptions: MarkerOptions = {
-              position: new LatLng(place.latitude, place.longitude),
-              title: place.title,
-            }
-            map.addMarker(markerOptions)
-              .then((marker: Marker) => {
-                 marker.showInfoWindow();
-                 marker.addEventListener(GoogleMapsEvent.MARKER_CLICK)
-                    .subscribe((e) => {
-                      this.selectedPlace.title = e.getTitle();
-                      this.selectedPlace.latitude = e.get('position').lat;
-                      this.selectedPlace.longitude = e.get('position').lng;
-                    });
-               });
-          }
+              position: position,
+              title: this.myplace.title
+            };
 
-          map.addMarker(markerOptions)
-          .then((marker: Marker) => {
-            marker.showInfoWindow();
-          });
-       }
-     );
-   }
+            for (let place of this.places){
+              let markerOptions: MarkerOptions = {
+                position: new LatLng(place.latitude, place.longitude),
+                title: place.title,
+              };
+
+              map.addMarker(markerOptions)
+                .then((marker: Marker) => {
+                   marker.showInfoWindow();
+                   marker.addEventListener(GoogleMapsEvent.MARKER_CLICK)
+                      .subscribe((e) => {
+                        this.selectedPlace.title = e.getTitle();
+                        this.selectedPlace.latitude = e.get('position').lat;
+                        this.selectedPlace.longitude = e.get('position').lng;
+                      });
+                 });
+            }
+
+            map.addMarker(markerOptions)
+            .then((marker: Marker) => {
+              marker.showInfoWindow();
+            });
+         }
+       );
+    });
+  }
 
   addPlace() {
     console.log(this.myplace);
