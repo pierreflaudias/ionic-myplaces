@@ -9,11 +9,10 @@
 
 <ion-content>
   <ion-list>
-    <button ion-item *ngFor="let item of items" (click)="itemTapped($event, item)">
-      <ion-icon name="{{item.icon}}" item-left></ion-icon>
-      {{item.title}}
+    <button ion-item *ngFor="let place of places" (click)="itemTapped($event, item)">
+      {{place.title}}
       <div class="item-note" item-right>
-        {{item.note}}
+        {{place.latitude}} - {{place.longitude}}
       </div>
     </button>
   </ion-list>

@@ -14,6 +14,12 @@ import { GoogleMaps } from '@ionic-native/google-maps';
 import { IonicStorageModule } from '@ionic/storage';
 import { Diagnostic } from '@ionic-native/diagnostic';
 import { LocationAccuracy } from '@ionic-native/location-accuracy';
+import {StorageService} from "../services/storage-service";
+import {PositionGetterService} from "../services/position-getter-service";
+import {DistanceCalculatorService} from "../services/distance-calculator-service";
+import {MapLoaderService} from "../services/map-loader-service";
+
+
 
 @NgModule({
   declarations: [
@@ -27,7 +33,9 @@ import { LocationAccuracy } from '@ionic-native/location-accuracy';
     IonicModule.forRoot(MyApp),
     IonicStorageModule.forRoot(),
   ],
-  bootstrap: [IonicApp],
+  bootstrap: [
+    IonicApp
+  ],
   entryComponents: [
     MyApp,
     MyPlacesPage,
@@ -41,6 +49,10 @@ import { LocationAccuracy } from '@ionic-native/location-accuracy';
     GoogleMaps,
     Diagnostic,
     LocationAccuracy,
+    StorageService,
+    DistanceCalculatorService,
+    MapLoaderService,
+    PositionGetterService,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
 })

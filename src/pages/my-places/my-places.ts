@@ -1,13 +1,17 @@
 import { Component } from '@angular/core';
 import { Geolocation } from '@ionic-native/geolocation';
 import { GoogleMaps, GoogleMap, GoogleMapsEvent, LatLng, CameraPosition, MarkerOptions, Marker } from '@ionic-native/google-maps';
-import { Storage } from '@ionic/storage';
+
 import { Diagnostic } from '@ionic-native/diagnostic';
 import { Platform } from 'ionic-angular';
 import { LocationAccuracy } from '@ionic-native/location-accuracy';
-
 import { LoadingController, Loading } from 'ionic-angular';
 import { Place } from '../../models/place';
+import {StorageService} from "../../services/storage-service";
+import {MapLoaderService} from "../../services/map-loader-service";
+import {DistanceCalculatorService} from "../../services/distance-calculator-service";
+import {PositionGetterService} from "../../services/position-getter-service";
+declare var google;
 
 @Component({
   selector: 'page-my-places',
@@ -20,17 +24,13 @@ export class MyPlacesPage {
   selectedPlace: Place = new Place();
   loading: Loading;
 
-  constructor(private geolocation: Geolocation, private googleMaps: GoogleMaps, private storage: Storage, private diagnostic: Diagnostic, private platform: Platform, private locationAccuracy: LocationAccuracy, private loadingCtrl: LoadingController){
+  constructor(private storage: StorageService, private mapLoader: MapLoaderService, private distanceCalculator: DistanceCalculatorService, private positionGetter: PositionGetterService, private geolocation: Geolocation, private diagnostic: Diagnostic, private platform: Platform, private locationAccuracy: LocationAccuracy, private loadingCtrl: LoadingController){
     this.loading = loadingCtrl.create();
     this.loading.present();
     platform.ready()
       .then(() => this.checkLocationAuthorization())
-      // .then(storage.ready)
       .then(() => {
-        storage.forEach( (value, key, index) => {
-          this.places.push(value);
-          console.log(this.places);
-        });
+        this.storage.getPlaces(this.places);
      });
   }
 
@@ -61,31 +61,27 @@ export class MyPlacesPage {
   }
 
   getPosition(){
+    this.myplace = this.positionGetter.returnPosition();
     let options = {
       enableHighAccuracy: false,
       timeout: 3000
     };
-    console.log(options);
+
+    this.loadMap();
+
     const subscription = this.geolocation.watchPosition(options)
-      //.filter((p) => p.coords !== undefined) //Filter Out Errors
+    //.filter((p) => p.coords !== undefined) //Filter Out Errors
       .subscribe(position => {
-        console.log(position.coords.longitude + ' ' + position.coords.latitude);
-        this.myplace = new Place(position.coords.longitude, position.coords.latitude, 'You are here');
+        console.log(position);
+        console.log('Distance entre les points ', this.distanceCalculator.calculateDistance(this.myplace.latitude, this.myplace.longitude, 45.7623217, 3.1089166));
+        if(position.coords != null) {
+          this.myplace.latitude = position.coords.latitude;
+          this.myplace.longitude = position.coords.longitude;
+        }
+          console.log("Latitude : ", this.myplace.latitude);
+          console.log("Longitude : ", this.myplace.longitude);
 
-        console.log("Latitude : " , this.myplace.latitude);
-        console.log("Longitude : " , this.myplace.longitude);
-        this.loadMap();
       });
-    /*this.geolocation.getCurrentPosition(options)
-      .then((resp) => {
-        console.log(resp);
-        this.myplace = new Place(resp.coords.longitude, resp.coords.latitude, 'You are here');
-
-        console.log("Latitude : " , this.myplace.latitude);
-        console.log("Longitude : " , this.myplace.longitude);
-        this.loadMap();
-    })
-    .catch(error => console.log("Error getting location", error));*/
   }
 
   loadMap() {
@@ -96,11 +92,17 @@ export class MyPlacesPage {
      // </ion-content>
 
      // create a new map by passing HTMLElement
-     let element: HTMLElement = document.getElementById('map');
+    let map = this.mapLoader.loadMap(document.getElementById('map'), this.places, this.myplace);
 
-     console.log(element);
+    this.loading.dismiss();
 
-    this.googleMaps.isAvailable().then(() => {
+       /*google.maps.addEventListener(map, 'idle', function () {
+         console.log('Map is ready!');
+         this.loading.dismiss();
+       });*/
+     //});
+
+    /*this.googleMaps.isAvailable().then(() => {
       let map: GoogleMap = this.googleMaps.create(element);
 
        console.log(map);
@@ -159,19 +161,12 @@ export class MyPlacesPage {
             });
          }
        );
-    });
+    });*/
   }
 
   addPlace() {
     console.log(this.myplace);
     this.places.push(this.myplace);
-    this.storage.ready().then(() => {
-      this.storage.length().then((l) => {
-        // set a key/value
-        this.storage.set(l.toString(), this.myplace);
-      });
-     });
-
+    this.storage.addPlace(this.myplace);
   }
-
  }

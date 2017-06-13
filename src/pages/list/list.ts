@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 
-import { NavController, NavParams } from 'ionic-angular';
-
+import {NavController, NavParams, Platform} from 'ionic-angular';
+import { Storage } from '@ionic/storage';
 import { PlaceDetailsPage } from '../place-details/place-details';
+import {Place} from "../../models/place";
 
 @Component({
   selector: 'page-list',
@@ -10,23 +11,23 @@ import { PlaceDetailsPage } from '../place-details/place-details';
 })
 export class ListPage {
   icons: string[];
+  places: Array<Place> = [];
   items: Array<{title: string, note: string, icon: string}>;
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
-    this.icons = ['flask', 'wifi', 'beer', 'football', 'basketball', 'paper-plane',
-    'american-football', 'boat', 'bluetooth', 'build'];
+  constructor(private platform: Platform, public navCtrl: NavController, public navParams: NavParams, private storage: Storage) {
 
-    this.items = [];
-    for(let i = 1; i < 11; i++) {
-      this.items.push({
-        title: 'Item ' + i,
-        note: 'This is item #' + i,
-        icon: this.icons[Math.floor(Math.random() * this.icons.length)]
+    this.places = [];
+
+    platform.ready().then(()=> {
+      this.storage.forEach( (value, key, index) => {
+        this.places.push(value);
+        console.log(this.places);
       });
-    }
+    });
   }
 
   itemTapped(event, item) {
+    console.log(item);
     this.navCtrl.push(PlaceDetailsPage, {
       item: item
     });
