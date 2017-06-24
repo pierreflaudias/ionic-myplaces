@@ -61,11 +61,13 @@ export class MyPlacesPage {
   }
 
   getPosition(){
-    this.myplace = this.positionGetter.returnPosition();
+    this.positionGetter.returnPosition().then(place => this.myplace = place);
     let options = {
       enableHighAccuracy: false,
       timeout: 3000
     };
+
+    console.log('in getPosition', this.myplace);
 
     this.loadMap();
 
@@ -92,8 +94,9 @@ export class MyPlacesPage {
      // </ion-content>
 
      // create a new map by passing HTMLElement
+    console.log('in loadMap');
     let map = this.mapLoader.loadMap(document.getElementById('map'), this.places, this.myplace);
-
+    console.log(map);
     this.loading.dismiss();
 
        /*google.maps.addEventListener(map, 'idle', function () {

@@ -11,13 +11,13 @@ import {Geolocation} from "@ionic-native/geolocation";
 export class PositionGetterService {
   constructor(private geolocation: Geolocation, private diagnostic: Diagnostic, private locationAccuracy: LocationAccuracy){}
 
-   returnPosition(): Place {
+   returnPosition(): Promise<Place> {
     let place: Place = null;
     this.diagnostic.isLocationEnabled()
       .then((isEnabled) => {
         if(isEnabled){
           console.log('location enabled');
-          place = this.getPosition();
+          this.getPosition().then(place => { return place });
         } else{
           console.log('location not enabled');
           this.locationAccuracy.canRequest().then((canRequest: boolean) => {
@@ -26,7 +26,7 @@ export class PositionGetterService {
               this.locationAccuracy.request(this.locationAccuracy.REQUEST_PRIORITY_LOW_POWER).then(
                 () => {
                   console.log('Location permission granted');
-                  place = this.getPosition();
+                  this.getPosition().then(place => { return place });
                 })
                 .catch(error => console.log('Error requesting location permissions', error));
             } else {
@@ -35,10 +35,10 @@ export class PositionGetterService {
           });
         }
       }).catch(err => console.log(err));
-    return place;
+    return Promise.resolve(place);
   }
 
-  private getPosition(): Place {
+  private getPosition(): Promise<Place> {
     let place: Place = null;
     let options = {
       enableHighAccuracy: false,
@@ -55,6 +55,6 @@ export class PositionGetterService {
         //this.loadMap();
       })
       .catch(error => console.log("Error getting location", error));
-    return place;
+    return Promise.resolve(place);
   }
 }

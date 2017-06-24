@@ -56,9 +56,9 @@
   version "3.7.0"
   resolved "https://registry.yarnpkg.com/@ionic-native/geolocation/-/geolocation-3.7.0.tgz#3ac56451ac06afe370affe2f0c8a4d0f4d4c4108"
 
-"@ionic-native/google-maps@^3.7.0":
-  version "3.7.0"
-  resolved "https://registry.yarnpkg.com/@ionic-native/google-maps/-/google-maps-3.7.0.tgz#c4a451802eee09693f79d648f11e4096fb605440"
+"@ionic-native/google-maps@^3.12.1":
+  version "3.12.1"
+  resolved "https://registry.yarnpkg.com/@ionic-native/google-maps/-/google-maps-3.12.1.tgz#819aff5630c68d42d03762bb2703801ab7a50740"
 
 "@ionic-native/location-accuracy@^3.7.0":
   version "3.7.0"
@@ -141,6 +141,10 @@
     "@types/localforage" "0.0.30"
     localforage "~1.4.2"
     localforage-cordovasqlitedriver "~1.5.0"
+
+"@types/googlemaps@^3.26.13":
+  version "3.26.13"
+  resolved "https://registry.yarnpkg.com/@types/googlemaps/-/googlemaps-3.26.13.tgz#a6df2dab5a8610dbe14c88144e4e530d3c294448"
 
 "@types/localforage@0.0.30":
   version "0.0.30"
@@ -1110,11 +1114,11 @@ cordova-plugin-compat@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/cordova-plugin-compat/-/cordova-plugin-compat-1.1.0.tgz#92bdf169feb61205323dcc96a3ff8348e37e87fc"
 
-cordova-plugin-console@^1.0.5:
+cordova-plugin-console@^1.0.7:
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/cordova-plugin-console/-/cordova-plugin-console-1.0.7.tgz#89b7a92ed1c335888dfc00d902dc417201cf3b0b"
 
-cordova-plugin-device@^1.1.4:
+cordova-plugin-device@^1.1.6:
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/cordova-plugin-device/-/cordova-plugin-device-1.1.6.tgz#2d21764cad7c9b801523e4e09a30e024b249334b"
 
@@ -1134,11 +1138,11 @@ cordova-plugin-splashscreen@^4.0.3:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/cordova-plugin-splashscreen/-/cordova-plugin-splashscreen-4.0.3.tgz#773cd1363c1f3bacb9901663e9e3793dd3e0a19d"
 
-cordova-plugin-statusbar@^2.2.2:
+cordova-plugin-statusbar@^2.2.3:
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/cordova-plugin-statusbar/-/cordova-plugin-statusbar-2.2.3.tgz#51c5e02ad433bebd0b0dc977a446eb91dfee1502"
 
-cordova-plugin-whitelist@^1.3.1:
+cordova-plugin-whitelist@^1.3.2:
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/cordova-plugin-whitelist/-/cordova-plugin-whitelist-1.3.2.tgz#5b6335feb9f5301f3c013b9096cb8885bdbd5076"
 
@@ -1156,9 +1160,9 @@ cordova-sqlite-storage@^2.0.4:
   dependencies:
     cordova-sqlite-storage-dependencies "1.0.4"
 
-cordova.plugins.diagnostic@^3.6.1:
-  version "3.6.1"
-  resolved "https://registry.yarnpkg.com/cordova.plugins.diagnostic/-/cordova.plugins.diagnostic-3.6.1.tgz#9bea716acc743300e5795107b30def462f275857"
+cordova.plugins.diagnostic@^3.6.2:
+  version "3.6.5"
+  resolved "https://registry.yarnpkg.com/cordova.plugins.diagnostic/-/cordova.plugins.diagnostic-3.6.5.tgz#35d459fb1053490ece26568a2c98588a869f6931"
 
 core-js@^2.4.0:
   version "2.4.1"
